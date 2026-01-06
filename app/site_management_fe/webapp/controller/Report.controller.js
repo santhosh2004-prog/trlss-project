@@ -62,16 +62,16 @@ exportLibrary
 
             /* ===== DATA (ONLY 3 PROD FIELDS) ===== */
 const aReportData = [
-    { date: "2025-01-01", eastProd: 120, westProd: 95,  southProd: 60, northProd: 70, eastErosion: 12, westErosion: 9,  totalProd: 345 },
-    { date: "2025-01-02", eastProd: 118, westProd: 92,  southProd: 58, northProd: 68, eastErosion: 11, westErosion: 8,  totalProd: 336 },
-    { date: "2025-01-03", eastProd: 125, westProd: 100, southProd: 65, northProd: 75, eastErosion: 13, westErosion: 10, totalProd: 365 },
-    { date: "2025-01-04", eastProd: 130, westProd: 105, southProd: 68, northProd: 78, eastErosion: 14, westErosion: 11, totalProd: 381 },
-    { date: "2025-01-05", eastProd: 128, westProd: 0,   southProd: 66, northProd: 76, eastErosion: 13, westErosion: 10, totalProd: 270 },
-    { date: "2025-01-06", eastProd: 132, westProd: 108, southProd: 70, northProd: 80, eastErosion: 14, westErosion: 11, totalProd: 390 },
-    { date: "2025-01-07", eastProd: 134, westProd: 110, southProd: 72, northProd: 82, eastErosion: 15, westErosion: 11, totalProd: 398 },
-    { date: "2025-01-08", eastProd: 136, westProd: 112, southProd: 74, northProd: 84, eastErosion: 15, westErosion: 12, totalProd: 406 },
-    { date: "2025-01-09", eastProd: 138, westProd: 114, southProd: 76, northProd: 86, eastErosion: 16, westErosion: 12, totalProd: 414 },
-    { date: "2025-01-10", eastProd: 140, westProd: 116, southProd: 78, northProd: 88, eastErosion: 16, westErosion: 13, totalProd: 422 }
+    { date: "2025-01-01", eastProd: 120, westProd: 95,  southProd: 60, northProd: 70, eastErosion: 12, westErosion: 9,  southErosion: 8,  northErosion: 10, totalProd: 345 },
+    { date: "2025-01-02", eastProd: 118, westProd: 92,  southProd: 58, northProd: 68, eastErosion: 11, westErosion: 8,  southErosion: 7,  northErosion: 9,  totalProd: 336 },
+    { date: "2025-01-03", eastProd: 125, westProd: 100, southProd: 65, northProd: 75, eastErosion: 13, westErosion: 10, southErosion: 9,  northErosion: 11, totalProd: 365 },
+    { date: "2025-01-04", eastProd: 130, westProd: 105, southProd: 68, northProd: 78, eastErosion: 14, westErosion: 11, southErosion: 10, northErosion: 12, totalProd: 381 },
+    { date: "2025-01-05", eastProd: 128, westProd: 0,   southProd: 66, northProd: 76, eastErosion: 13, westErosion: 10, southErosion: 9,  northErosion: 11, totalProd: 270 },
+    { date: "2025-01-06", eastProd: 132, westProd: 108, southProd: 70, northProd: 80, eastErosion: 14, westErosion: 11, southErosion: 10, northErosion: 12, totalProd: 390 },
+    { date: "2025-01-07", eastProd: 134, westProd: 110, southProd: 72, northProd: 82, eastErosion: 15, westErosion: 11, southErosion: 11, northErosion: 13, totalProd: 398 },
+    { date: "2025-01-08", eastProd: 136, westProd: 112, southProd: 74, northProd: 84, eastErosion: 15, westErosion: 12, southErosion: 11, northErosion: 13, totalProd: 406 },
+    { date: "2025-01-09", eastProd: 138, westProd: 114, southProd: 76, northProd: 86, eastErosion: 16, westErosion: 12, southErosion: 12, northErosion: 14, totalProd: 414 },
+    { date: "2025-01-10", eastProd: 140, westProd: 116, southProd: 78, northProd: 88, eastErosion: 16, westErosion: 13, southErosion: 12, northErosion: 14, totalProd: 422 }
 ];
 
 
@@ -126,6 +126,7 @@ const aReportData = [
         new sap.m.ToolbarSpacer({ width: "1rem" }), // 👈 SPACE
         new sap.m.Button({
             text: "Export",
+            type:"Success",
             press: this.onExportExcel.bind(this)
         })
     ]
@@ -292,6 +293,7 @@ onViewChart: function () {
         content: [oChartsBox],
         endButton: new Button({
             text: "Close",
+            type:"Negative",
             press: function () {
                 oDialog.close();
                 oDialog.destroy();
@@ -327,24 +329,38 @@ onViewChart: function () {
     });
 
     /* =========================
-       2. SPREADSHEET SETTINGS
+       2. BUILD TIMESTAMPED FILE NAME
+    ========================= */
+    const oNow = new Date();
+
+    const sTimestamp =
+        oNow.getFullYear() +
+        ("0" + (oNow.getMonth() + 1)).slice(-2) +
+        ("0" + oNow.getDate()).slice(-2) + "_" +
+        ("0" + oNow.getHours()).slice(-2) +
+        ("0" + oNow.getMinutes()).slice(-2) +
+        ("0" + oNow.getSeconds()).slice(-2);
+
+    const sFileName = `Production_Report_${sTimestamp}.xlsx`;
+
+    /* =========================
+       3. SPREADSHEET SETTINGS
     ========================= */
     const oSettings = {
         workbook: {
             columns: aColumns
         },
         dataSource: aData,
-        fileName: "Production_Report.xlsx"
+        fileName: sFileName
     };
 
     /* =========================
-       3. CREATE & DOWNLOAD
+       4. CREATE & DOWNLOAD
     ========================= */
     const oSheet = new Spreadsheet(oSettings);
     oSheet.build().finally(function () {
         oSheet.destroy();
     });
-    
 }
 
 
