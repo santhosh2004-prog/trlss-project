@@ -1,0 +1,41 @@
+using {trlmonitoring} from '../db/schema';
+
+service siteManagementService {
+    entity siteMaster         as projection on trlmonitoring.SiteMaster;
+
+    entity siteProductionLine as projection on trlmonitoring.SiteProductionLine;
+
+    entity campaign           as projection on trlmonitoring.Campaign;
+
+    entity sensor             as projection on trlmonitoring.Sensor;
+
+    entity dailyProduction    as projection on trlmonitoring.DailyProduction;
+
+    entity sensorReading      as projection on trlmonitoring.SensorReading;
+
+
+    /* ================= ACTIONS / FUNCTIONS ================= */
+
+    action   generateSiteId(customer_name: String,
+                            location: String,
+                            runner_id: String)         returns {
+        site_id : String;
+    };
+
+    function getLastCampaignNo(customer_name: String,
+                               location: String,
+                               runner_id: String)      returns {
+        campaign_no         : String;
+        repair_status       : String;
+        minor_repair_status : Integer;
+        createdAt           : Timestamp;
+    };
+
+    function generateCampaignNumber(customer_name: String,
+                                    location: String,
+                                    runner_id: String,
+                                    line_name: String) returns String;
+
+    
+
+}
