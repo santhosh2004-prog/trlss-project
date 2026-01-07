@@ -41,7 +41,7 @@
 
                     <!-- Production Line ID -->
                     <VBox width="28%">
-                        <Label text="Production Line" required="true" />
+                        <Label text="Runner" required="true" />
                         <Input
                             id="ProductionLineId"
                             placeholder="Enter Production Line"
@@ -102,7 +102,8 @@
         </customHeader>
 
         <!-- ========== GENERAL INFORMATION ========== -->
-   <Panel
+<!-- ========== GENERAL INFORMATION ========== -->
+<Panel
     headerText="General Information"
     class="whiteCard"
 >
@@ -111,10 +112,10 @@
         vSpacing="1"
     >
 
-        <!-- Row 1 -->
+        <!-- ===== ROW 1 : 3 COLUMNS ===== -->
         <VBox>
             <layoutData>
-                <layout:GridData span="L6 M6 S12" />
+                <layout:GridData span="L4 M6 S12" />
             </layoutData>
             <Label text="Customer" />
             <Input
@@ -125,7 +126,7 @@
 
         <VBox>
             <layoutData>
-                <layout:GridData span="L6 M6 S12" />
+                <layout:GridData span="L4 M6 S12" />
             </layoutData>
             <Label text="Location" />
             <Input
@@ -134,27 +135,18 @@
             />
         </VBox>
 
-        <!-- Row 2 -->
         <VBox>
             <layoutData>
-                <layout:GridData span="L6 M6 S12" />
+                <layout:GridData span="L4 M6 S12" />
             </layoutData>
             <Label text="Furnace ID" />
-            <Input editable="false" />
-        </VBox>
-
-        <VBox>
-            <layoutData>
-                <layout:GridData span="L6 M6 S12" />
-            </layoutData>
-            <Label text="Runner ID" />
             <Input
                 value="{view>/siteMaster/runner_id}"
                 editable="false"
             />
         </VBox>
 
-        <!-- Row 3 (3 columns) -->
+        <!-- ===== ROW 2 : 3 COLUMNS ===== -->
         <VBox>
             <layoutData>
                 <layout:GridData span="L4 M6 S12" />
@@ -184,14 +176,12 @@
             <Label text="Minor Repair Status" />
             <Input
                 value="{view>/campinfo/minor_repair_status}"
-                type="Number"
                 editable="false"
             />
         </VBox>
 
     </layout:Grid>
 </Panel>
-
 
         <!-- ========== DYNAMIC PRODUCTION LINES ========== -->
         <VBox

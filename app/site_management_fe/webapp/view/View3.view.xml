@@ -114,7 +114,7 @@
                     <!-- Production Line ID -->
                     <VBox width="25%">
                         <Label
-                            text="Production Line"
+                            text="Runner"
                             required="true"
                         />
                         <Input
@@ -183,20 +183,16 @@
         </Panel>
 
         <!-- GENERAL INFORMATION PANEL (READ-ONLY) -->
-       <Panel
+     <Panel
     headerText="General Information"
     class="whiteCard"
 >
+    <!-- ================= ROW 1 : Customer / Location / Furnace ID ================= -->
     <layout:Grid
+        defaultSpan="L4 M4 S12"
         hSpacing="1"
-        vSpacing="1"
     >
-
-        <!-- Row 1 -->
         <VBox>
-            <layoutData>
-                <layout:GridData span="L6 M6 S12" />
-            </layoutData>
             <Label text="Customer" />
             <Input
                 value="{formData>/siteMaster/customer_name}"
@@ -205,9 +201,6 @@
         </VBox>
 
         <VBox>
-            <layoutData>
-                <layout:GridData span="L6 M6 S12" />
-            </layoutData>
             <Label text="Location" />
             <Input
                 value="{formData>/siteMaster/location}"
@@ -215,68 +208,51 @@
             />
         </VBox>
 
-        <!-- Row 2 -->
-      <VBox>
-            <layoutData>
-                <layout:GridData span="L6 M6 S12" />
-            </layoutData>
-            <Label text="Furnace ID" />
-            <Input
-                
-                editable="false"
-            />
-        </VBox>
-
-
         <VBox>
-            <layoutData>
-                <layout:GridData span="L6 M6 S12" />
-            </layoutData>
-            <Label text="Runner ID" />
+            <Label text="Furnace ID" />
             <Input
                 value="{formData>/siteMaster/runner_id}"
                 editable="false"
             />
         </VBox>
-        
-       
-       
+    </layout:Grid>
 
-        <!-- Row 3 -->
-         <VBox>
-            <layoutData>
-                <layout:GridData span="L4 M6 S12" />
-            </layoutData>
+    <!-- ================= ROW 2 : Campaign No ================= -->
+    <layout:Grid
+        defaultSpan="L4 M4 S12"
+        hSpacing="1"
+    >
+        <VBox>
             <Label text="Campaign No" />
             <Input
                 value="{formData>/campinfo/campaign_no}"
                 editable="false"
             />
         </VBox>
+    
+
+    <!-- ================= ROW 3 : Repair Status ================= -->
+   
         <VBox>
-            <layoutData>
-                <layout:GridData span="L4 M6 S12" />
-            </layoutData>
             <Label text="Repair Status" />
             <Input
                 value="{formData>/campinfo/repair_status}"
                 editable="false"
             />
         </VBox>
+   
 
+    <!-- ================= ROW 4 : Minor Repair Status ================= -->
+  
         <VBox>
-            <layoutData>
-                <layout:GridData span="L4 M6 S12" />
-            </layoutData>
             <Label text="Minor Repair Status" />
             <Input
                 value="{formData>/campinfo/minor_repair_status}"
-                type="Number"
                 editable="false"
             />
         </VBox>
-
     </layout:Grid>
+
 </Panel>
 
 

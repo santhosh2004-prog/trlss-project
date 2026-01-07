@@ -405,7 +405,7 @@ sap.ui.define([
             const bEditable = true; // Customize based on productionStageCompleted if needed
 
             const oPanel = new sap.m.Panel({
-                headerText: "Production Line : " + oLine.line_name,
+                headerText: "Production Line  : " + oLine.line_name,
                 expandable: false,
                 customData: [new sap.ui.core.CustomData({ key: "lineId", value: oLine.ID })],
                 content: [

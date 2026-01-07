@@ -333,15 +333,11 @@ onViewChart: function () {
     ========================= */
     const oNow = new Date();
 
-    const sTimestamp =
-        oNow.getFullYear() +
-        ("0" + (oNow.getMonth() + 1)).slice(-2) +
-        ("0" + oNow.getDate()).slice(-2) + "_" +
-        ("0" + oNow.getHours()).slice(-2) +
-        ("0" + oNow.getMinutes()).slice(-2) +
-        ("0" + oNow.getSeconds()).slice(-2);
+  const sTimestamp =
+    ("0" + oNow.getHours()).slice(-2) + "-" +
+    ("0" + oNow.getMinutes()).slice(-2) 
+const sFileName = `Production_Report_${sTimestamp}.xlsx`;
 
-    const sFileName = `Production_Report_${sTimestamp}.xlsx`;
 
     /* =========================
        3. SPREADSHEET SETTINGS
@@ -351,7 +347,7 @@ onViewChart: function () {
             columns: aColumns
         },
         dataSource: aData,
-        fileName: sFileName
+        fileName: sFileName 
     };
 
     /* =========================
@@ -361,7 +357,81 @@ onViewChart: function () {
     oSheet.build().finally(function () {
         oSheet.destroy();
     });
+},onSiteIdValueHelp: function () {
+    const oView = this.getView();
+
+    // Create dialog only once
+    if (!this._oSiteVHDialog) {
+        this._oSiteVHDialog = new sap.m.SelectDialog({
+            title: "Select Site ID",
+
+            liveChange: this._onSiteSearch.bind(this),
+
+            confirm: this._onSiteSelect.bind(this),
+
+            cancel: () => {
+                this._oSiteVHDialog.close();
+            },
+
+            items: {
+                path: "/sites",
+                template: new sap.m.StandardListItem({
+                    title: "{site_id}",
+                    description: "{customer_name} - {location}"
+                })
+            }
+        });
+
+        oView.addDependent(this._oSiteVHDialog);
+    }
+
+    // Bind SiteMaster from backend
+    const oListBinding = this.getOwnerComponent()
+        .getModel()
+        .bindList("/siteMaster");
+
+    oListBinding.requestContexts()
+        .then(aContexts => {
+            const aSites = aContexts.map(oCtx => oCtx.getObject());
+
+            const oVHModel = new sap.ui.model.json.JSONModel({
+                sites: aSites
+            });
+
+            this._oSiteVHDialog.setModel(oVHModel);
+            this._oSiteVHDialog.open();
+        })
+        .catch(err => {
+            sap.m.MessageToast.show("Failed to load Site IDs");
+            console.error(err);
+        });
+},
+
+_onSiteSearch: function (oEvent) {
+    const sValue = oEvent.getParameter("value");
+
+    const oFilter = new sap.ui.model.Filter(
+        "site_id",
+        sap.ui.model.FilterOperator.Contains,
+        sValue
+    );
+
+    oEvent.getSource().getBinding("items").filter([oFilter]);
+},
+
+_onSiteSelect: function (oEvent) {
+    const oItem = oEvent.getParameter("selectedItem");
+    if (!oItem) return;
+
+    this.byId("siteId").setValue(oItem.getTitle());
+    this._oSiteVHDialog.close();
+},
+
+onSiteIdLiveChange: function (oEvent) {
+    oEvent.getSource().setValue("");
+    sap.m.MessageToast.show("Please select Site ID using value help");
 }
+
 
 
 

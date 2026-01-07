@@ -106,7 +106,7 @@
                     />
                 </VBox>
                 
-
+<!-- 
               <VBox>
                     <Label text="Furnace ID" />
                     <Input
@@ -114,10 +114,10 @@
                         editable="false"
                         
                     />
-                </VBox>
+                </VBox> -->
 
                 <VBox>
-                    <Label text="Runner ID" />
+                    <Label text="Furnace ID" />
                     <Input
                         id="runnerId"
                         value="{/runnerId}"

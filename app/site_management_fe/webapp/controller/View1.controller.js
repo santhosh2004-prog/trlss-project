@@ -755,9 +755,9 @@ sap.ui.define([
                 const lineGrid = new sap.ui.layout.Grid({
                     defaultSpan: "L4 M6 S12",
                     content: [
-                        new sap.m.VBox({ items: [new sap.m.Label({ text: "Line Name", design: "Bold" }), lineNameInput] }),
-                        new sap.m.VBox({ items: [new sap.m.Label({ text: "No of SPG Sensors", design: "Bold" }), spgCount, spgBox] }),
-                        new sap.m.VBox({ items: [new sap.m.Label({ text: "No of Mudgun Sensors", design: "Bold" }), mudgunCount, mudgunBox] })
+                        new sap.m.VBox({ items: [new sap.m.Label({ text: "Runnner", design: "Bold" }), lineNameInput] }),
+                        new sap.m.VBox({ items: [new sap.m.Label({ text: "No of OFF side Sensors", design: "Bold" }), spgCount, spgBox] }),
+                        new sap.m.VBox({ items: [new sap.m.Label({ text: "No of Mudgun side Sensors", design: "Bold" }), mudgunCount, mudgunBox] })
                     ]
                 });
 
