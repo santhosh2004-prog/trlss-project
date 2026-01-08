@@ -50,9 +50,10 @@ sap.ui.define([
             oModel.setProperty("/materials", aMaterials);
         }
         ,
-        onSave: function () {
+onSave: function () {
     const oView = this.getView();
     const oFormModel = oView.getModel("formData");
+    const oODataModel = this.getOwnerComponent().getModel();
 
     const sSiteId = oView.byId("siteId").getValue().trim();
 
@@ -68,30 +69,77 @@ sap.ui.define([
         return;
     }
 
-    // Build payload array based on CDS
-    const aPayload = aMaterials.map(oItem => ({
-        siteId: sSiteId,
-        material: oItem.material || "",
-        materialDescription: oItem.materialDesc || "",
-        quantity: Number(oItem.quantity) || 0,
-        batch: oItem.batch || ""
-    }));
+    // ================= FETCH EXISTING INVENTORY =================
+    const aFilters = [
+        new sap.ui.model.Filter("siteId", "EQ", sSiteId)
+    ];
 
-    const oODataModel = this.getOwnerComponent().getModel();
-    const oListBinding = oODataModel.bindList("/inventory");
+    const oInventoryBinding = oODataModel.bindList(
+        "/inventory",
+        null,
+        null,
+        aFilters
+    );
 
-    aPayload.forEach(oEntry => {
-        oListBinding.create(oEntry);
-    });
+    oInventoryBinding.requestContexts().then(aContexts => {
 
-    oODataModel.submitBatch(oListBinding.getUpdateGroupId())
-        .then(() => {
-            sap.m.MessageToast.show("Inventory draft saved successfully");
-        })
-        .catch(err => {
-            sap.m.MessageBox.error(err?.message || "Save failed");
+        // Map existing inventory by REAL key (siteId + material)
+        const mExisting = {};
+        aContexts.forEach(oCtx => {
+            const oObj = oCtx.getObject();
+            mExisting[oObj.material] = oCtx;
         });
+
+        const sGroupId = oInventoryBinding.getUpdateGroupId();
+
+        // ================= CREATE / UPDATE =================
+        aMaterials.forEach(oItem => {
+
+            const sMaterial = oItem.material;
+
+            if (!sMaterial) {
+                return;
+            }
+
+            if (mExisting[sMaterial]) {
+                // ---------- UPDATE ----------
+                const oCtx = mExisting[sMaterial];
+
+                oCtx.setProperty("materialDescription", oItem.materialDesc || "");
+                oCtx.setProperty("quantity", Number(oItem.quantity) || 0);
+                oCtx.setProperty("batch", oItem.batch || "");
+
+            } else {
+                // ---------- CREATE ----------
+                oInventoryBinding.create({
+                    siteId: sSiteId,
+                    material: sMaterial,
+                    materialDescription: oItem.materialDesc || "",
+                    quantity: Number(oItem.quantity) || 0,
+                    batch: oItem.batch || ""
+                });
+            }
+        });
+
+        // ================= SUBMIT =================
+        oODataModel.submitBatch(sGroupId)
+            .then(() => {
+                sap.m.MessageToast.show("Inventory saved successfully");
+            })
+            .catch(err => {
+                sap.m.MessageBox.error(
+                    err?.message || "Save failed"
+                );
+            });
+
+    }).catch(err => {
+        sap.m.MessageBox.error(
+            err?.message || "Failed to fetch existing inventory"
+        );
+    });
 }
+
+
 ,
 onFindSitePress: function () {
     const oView = this.getView();
