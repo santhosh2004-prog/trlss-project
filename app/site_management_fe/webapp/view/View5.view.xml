@@ -255,10 +255,11 @@
                 <items>
                     <ColumnListItem>
                         <cells>
-                            <Input
-                                value="{formData>material}"
-                                placeholder="Enter Material"
-                            />
+                              <Input
+                                    value="{formData>material}"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onMaterialValueHelp"
+                                />
 
                             <Input
                                 value="{formData>materialDesc}"

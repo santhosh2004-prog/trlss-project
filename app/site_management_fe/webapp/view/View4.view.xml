@@ -172,9 +172,10 @@
                     <ColumnListItem>
                         <cells>
                             <Input
-                                value="{formData>material}"
-                                placeholder="Enter Material"
-                            />
+                                    value="{formData>material}"
+                                    showValueHelp="true"
+                                    valueHelpRequest=".onMaterialValueHelp"
+                                />
                             <Input
                                 value="{formData>materialDesc}"
                                 placeholder="Enter Description"

@@ -49,6 +49,9 @@ sap.ui.define([
 
             oModel.setProperty("/materials", aMaterials);
         }
+
+
+    
         ,
 onSave: function () {
     const oView = this.getView();
@@ -232,6 +235,80 @@ onFindSitePress: function () {
 
 
 ,
+onMaterialValueHelp: function (oEvent) {
+    const oView = this.getView();
+    const oInput = oEvent.getSource();          // clicked Material input
+    this._oMaterialInput = oInput;              // store reference for row update
+
+    // Create dialog only once
+    if (!this._oMaterialVHDialog) {
+        this._oMaterialVHDialog = new sap.m.SelectDialog({
+            title: "Select Material",
+
+            liveChange: (oEvent) => {
+                const sValue = oEvent.getParameter("value");
+                const oFilter = new sap.ui.model.Filter(
+                    "material",
+                    sap.ui.model.FilterOperator.Contains,
+                    sValue
+                );
+                oEvent.getSource().getBinding("items").filter([oFilter]);
+            },
+
+            confirm: (oEvent) => {
+                const oItem = oEvent.getParameter("selectedItem");
+                if (!oItem) return;
+
+                const oCtx = oItem.getBindingContext();
+                const oMat = oCtx.getObject();
+
+                // Get row binding context dynamically
+                const oRowCtx = this._oMaterialInput.getBindingContext("formData");
+
+                // Set values for that row
+                oRowCtx.setProperty("material", oMat.material);
+                oRowCtx.setProperty("materialDesc", oMat.materialDescription);
+
+                this._oMaterialVHDialog.close();
+            },
+
+            cancel: (oEvent) => {
+                oEvent.getSource().close();
+            },
+
+            items: {
+                path: "/materialsVH",
+                template: new sap.m.StandardListItem({
+                    title: "{material}",
+                    description: "{materialDescription}"
+                })
+            }
+        });
+
+        oView.addDependent(this._oMaterialVHDialog);
+    }
+
+    // ===== Fetch Materials from Inventory =====
+    const oODataModel = this.getOwnerComponent().getModel();
+    const oListBinding = oODataModel.bindList("/inventory");
+
+    oListBinding.requestContexts().then((aContexts) => {
+
+        const aMaterials = aContexts.map(oCtx => oCtx.getObject());
+
+        const oVHModel = new sap.ui.model.json.JSONModel({
+            materialsVH: aMaterials
+        });
+
+        this._oMaterialVHDialog.setModel(oVHModel);
+        this._oMaterialVHDialog.open();
+
+    }).catch((err) => {
+        sap.m.MessageToast.show("Failed to load Materials");
+        console.error(err);
+    });
+},
+
       
 
 
