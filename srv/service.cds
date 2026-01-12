@@ -14,6 +14,7 @@ service siteManagementService {
     entity dailyProduction    as projection on trlmonitoring.DailyProduction;
 
     entity sensorReading      as projection on trlmonitoring.SensorReading;
+
     entity consumption        as projection on trlmonitoring.Consumption;
 
     entity inventory          as projection on trlmonitoring.Inventory;
@@ -40,6 +41,22 @@ service siteManagementService {
                                     location: String,
                                     runner_id: String,
                                     line_name: String) returns String;
+
+    function getDailyProductionPivot(site_id: String,
+                                     fromDate: Date,
+                                     toDate: Date)     returns array of {
+        date      : Date;
+        totalProd : Integer;
+    // dynamic columns like EAST_prod, WEST_prod, EAST_erosion, etc.
+    };
+
+    function getDailyShiftSensorPivot(site_id: String,
+                                      productionLineName: String,
+                                      fromDate: Date,
+                                      toDate: Date)    returns array of {
+        date       : Date;
+        shift_code : String;
+    };
 
 
 }
