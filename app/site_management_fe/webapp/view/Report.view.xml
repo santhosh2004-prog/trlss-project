@@ -43,94 +43,65 @@
         <!-- HEADER -->
 
         <!-- Search Field -->
-        <Panel
-            headerText="Search "
-            class="whiteCard"
-            expandable="false"
-        >
-            <content>
-                <HBox
+     <Panel headerText="Search" class="whiteCard" expandable="false">
+    <content>
+
+        <!-- Row 1 -->
+        <HBox width="100%" justifyContent="SpaceBetween" alignItems="Start" class="sapUiSmallMarginTop">
+    <VBox width="30%">
+        <Label text="Site ID" required="true"/>
+        <Input id="siteId"
+               placeholder="Enter Site ID"
+               showValueHelp="true"
+               liveChange="onSiteIdLiveChange"
+               valueHelpRequest="onSiteIdValueHelp"/>
+    </VBox>
+
+    <VBox width="30%">
+        <Label text="Runner" required="true"/>
+        <Input id="ProductionLineId1"
+               placeholder="Enter Runner"
+               showValueHelp="true"
+               liveChange="onProdLineLiveChange"
+               valueHelpRequest="onProdLineValueHelp"/>
+    </VBox>
+
+    <VBox width="30%">
+        <Label text="Campaign Number" required="true"/>
+        <Input id="CampaignNoId1"
+               placeholder="Enter Campaign Number"
+               showValueHelp="true"
+               liveChange="onCampaignLiveChange"
+               valueHelpRequest="onCampaignValueHelp"/>
+    </VBox>
+</HBox>
+
+
+        <!-- Row 2 (NO GAP) -->
+    <HBox width="100%" justifyContent="Start" alignItems="Start"
+      class="sapUiSmallMarginTop gapLarge">
+    <VBox width="30%">
+        <Label text="From Date" required="true"/>
+        <DatePicker id="fromDate"
                     width="100%"
-                    justifyContent="SpaceBetween"
-                    alignItems="End"
-                    wrap="Wrap"
-                >
-                    <!-- Site ID -->
-                    <VBox width="25%">
-                        <Label
-                            text="Site ID"
-                            required="true"
-                        />
-                        <Input
-                            id="siteId"
-                            placeholder="Enter Site ID"
-                            showValueHelp="true"
-                            liveChange="onSiteIdLiveChange"
-                            valueHelpRequest="onSiteIdValueHelp"
-                        />
-                    </VBox>
-                     <VBox width="25%">
-                        <Label
-                            text="Runner"
-                            required="true"
-                        />
-                        <Input
-                            id="ProductionLineId1"
-                            placeholder="Enter Runner"
-                            showValueHelp="true"
-                            liveChange="onProdLineLiveChange"
-                            valueHelpRequest="onProdLineValueHelp"
-                        />
-                    </VBox>
+                    valueFormat="yyyy-MM-dd"
+                    displayFormat="dd-MM-yyyy"/>
+    </VBox>
 
-                    <!-- From Date -->
-                    <VBox width="15%">
-                        <Label
-                            text="From Date"
-                            required="true"
-                        />
-                        <DatePicker
-                            id="fromDate"
-                            width="100%"
-                            valueFormat="yyyy-MM-dd"
-                            displayFormat="dd-MM-yyyy"
-                        />
-                    </VBox>
-
-                    <!-- To Date -->
-                    <VBox width="15%">
-                        <Label
-                            text="To Date"
-                            required="true"
-                        />
-                        <DatePicker
-                            id="toDate"
-                            width="100%"
-                            valueFormat="yyyy-MM-dd"
-                            displayFormat="dd-MM-yyyy"
-                        />
-                    </VBox>
+    <VBox width="30%">
+        <Label text="To Date" required="true"/>
+        <DatePicker id="toDate"
+                    width="100%"
+                    valueFormat="yyyy-MM-dd"
+                    displayFormat="dd-MM-yyyy"/>
+    </VBox>
+</HBox>
 
 
-                    <!-- Find Button -->
-                    <!-- <VBox width="8%">
-                        <Label text=" " />
-                        <Button
-                            text="Find"
-                            type="Emphasized"
-                            width="100%"
-                            press="onFindPressDailyProduction"
-                        />
-                    </VBox> -->
 
-                    <!-- <VBox
-                        id="tableContainer"
-                        width="100%"
-                        class="sapUiSmallMarginTop"
-                    /> -->
-                </HBox>
-            </content>
-        </Panel>
+    </content>
+</Panel>
+
 
 
         <!-- HOUSE / PRODUCTION LINE 1 REPORT -->
@@ -227,6 +198,50 @@
 
     </content>
 </Panel>
+<Panel
+    headerText="Life After Major/Minor Repair"
+    class="whiteCard"
+    expandable="true"
+>
+    <content>
+
+        <HBox
+            width="100%"
+            alignItems="Center"
+            justifyContent="Start"
+            class="sapUiSmallMarginBottom"
+        >
+
+            <!-- Find Button (Only One) -->
+            <VBox width="20%" class="sapUiSmallMarginEnd">
+                <Button
+                    text="Find  Data"
+                    type="Success"
+                    width="100%"
+                    press="onFindPressLifeAfterMajorMinor"
+                />
+            </VBox>
+
+            <!-- Info Message -->
+            <VBox width="80%">
+                <tnt:InfoLabel
+                    text="Required fields: Site ID, Runner, Campaign Number"
+                    colorScheme="1"
+                />
+            </VBox>
+
+        </HBox>
+
+        <!-- Result Container -->
+        <VBox
+            id="lifeAfterMajorMinorContainer"
+            width="100%"
+            class="sapUiSmallMarginTop"
+        />
+
+    </content>
+</Panel>
+
 
 
         <!-- PLACEHOLDER FOR MORE LINES -->

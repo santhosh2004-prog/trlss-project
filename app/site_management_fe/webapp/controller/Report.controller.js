@@ -252,6 +252,94 @@ sap.ui.define([
             this._oProdVHDialog.close();
         }
         ,
+        onCampaignValueHelp: function () {
+    const oView = this.getView();
+
+    const sSiteId = this.byId("siteId").getValue();
+    const sRunner = this.byId("ProductionLineId1").getValue();
+
+    if (!sSiteId || !sRunner) {
+        sap.m.MessageToast.show("Please select Site ID and Runner first");
+        return;
+    }
+
+    // Create dialog only once
+    if (!this._oCampaignVHDialog) {
+        this._oCampaignVHDialog = new sap.m.SelectDialog({
+            title: "Select Campaign Number",
+
+            liveChange: this._onCampaignSearch.bind(this),
+
+            confirm: this._onCampaignSelect.bind(this),
+
+            cancel: () => {
+                this._oCampaignVHDialog.close();
+            },
+
+            items: {
+                path: "/campaigns",
+                template: new sap.m.StandardListItem({
+                    title: "{campaign}"
+                })
+            }
+        });
+
+        oView.addDependent(this._oCampaignVHDialog);
+    }
+
+    // Bind function import (OData V4)
+    // NOTE: Path format depends on how CAP exposes your function.
+    // This is the common CAP V4 format:
+    const sFuncPath =
+        "/getCampaignsBySite(site_id='" + encodeURIComponent(sSiteId) +
+        "',productionLineName='" + encodeURIComponent(sRunner) + "')";
+
+    const oListBinding = this.getOwnerComponent()
+        .getModel()
+        .bindList(sFuncPath);
+
+    oListBinding.requestContexts()
+        .then(aContexts => {
+            const aCampaigns = aContexts.map(oCtx => oCtx.getObject());
+
+            const oVHModel = new sap.ui.model.json.JSONModel({
+                campaigns: aCampaigns
+            });
+
+            this._oCampaignVHDialog.setModel(oVHModel);
+            this._oCampaignVHDialog.open();
+        })
+        .catch(err => {
+            sap.m.MessageToast.show("Failed to load Campaign Numbers");
+            console.error(err);
+        });
+},
+
+_onCampaignSearch: function (oEvent) {
+    const sValue = oEvent.getParameter("value");
+
+    const oFilter = new sap.ui.model.Filter(
+        "campaign",
+        sap.ui.model.FilterOperator.Contains,
+        sValue
+    );
+
+    oEvent.getSource().getBinding("items").filter([oFilter]);
+},
+
+_onCampaignSelect: function (oEvent) {
+    const oItem = oEvent.getParameter("selectedItem");
+    if (!oItem) return;
+
+    this.byId("CampaignNoId1").setValue(oItem.getTitle());
+    this._oCampaignVHDialog.close();
+},
+
+onCampaignLiveChange: function (oEvent) {
+    oEvent.getSource().setValue("");
+    sap.m.MessageToast.show("Please select Campaign Number using value help");
+}
+,
 
         /* =========================
            FIND BUTTON FOR DAILY PRODUCTION
@@ -664,7 +752,7 @@ sap.ui.define([
                         icon: "sap-icon://area-chart",
                         press: this.onViewDailyTemperatureChart.bind(this, "TEMPERATURE")
                     }));
-                     oButtonBox.addItem(new sap.m.ToolbarSpacer({ width: "1rem" }));
+                    oButtonBox.addItem(new sap.m.ToolbarSpacer({ width: "1rem" }));
 
                     oButtonBox.addItem(new sap.m.Button({
                         text: "Export Tempature",
@@ -683,88 +771,108 @@ sap.ui.define([
                     console.error("Temperature API Error:", err);
                     sap.m.MessageToast.show("Error fetching temperature data");
                 });
-        }, onExportExcel: function (sReportType) {
+        }, onExportExcel: function (sReportType, oEvent) {
 
-            var sSiteId = this.byId("siteId").getValue() || "SITE";
-            let aData = null;
+    // ✅ Use site id safely for file name
+    var sSiteId = this.byId("siteId")?.getValue() || "SITE";
+    let aData = null;
 
-            /* =========================
-               1. PICK DATA BASED ON BUTTON CLICK
-            ========================= */
-            if (sReportType === "PRODUCTION") {
+    /* =========================
+       1. PICK DATA BASED ON REPORT TYPE OR BUTTON ID
+    ========================= */
 
-                const oProdModel = this.getView().getModel("dailyProductionModel");
-                if (oProdModel) {
-                    aData = oProdModel.getProperty("/reportData");
-                }
+    // ---- A) Based on report type (your existing way)
+    if (sReportType === "PRODUCTION") {
+        const oProdModel = this.getView().getModel("dailyProductionModel");
+        aData = oProdModel?.getProperty("/reportData");
 
-            } else if (sReportType === "TEMPERATURE") {
+    } else if (sReportType === "TEMPERATURE") {
+        const oTempModel = this.getView().getModel("dailyTemperatureModel");
+        aData = oTempModel?.getProperty("/temperatureData");
 
-                const oTempModel = this.getView().getModel("dailyTemperatureModel");
-                if (oTempModel) {
-                    aData = oTempModel.getProperty("/temperatureData");
-                }
-            }
+    } else if (sReportType === "LIFE_AFTER_MAJOR_MINOR") {
+        const oLifeModel = this.getView().getModel("lifeAfterMajorMinorModel");
+        aData = oLifeModel?.getProperty("/reportData");
+    }
 
-            if (!aData || !aData.length) {
-                sap.m.MessageToast.show("No data available to export");
-                return;
-            }
+    // ---- B) If report type not passed, pick based on button id (no default creation)
+    // (Useful if you call: press: this.onExportExcel.bind(this) )
+    if ((!aData || !aData.length) && oEvent) {
+        const sBtnId = oEvent.getSource()?.getId() || "";
 
-            /* =========================
-               2. BUILD COLUMNS DYNAMICALLY
-            ========================= */
-            const aKeys = Object.keys(aData[0]);
+        if (sBtnId.includes("exportProduction")) {
+            const oProdModel = this.getView().getModel("dailyProductionModel");
+            aData = oProdModel?.getProperty("/reportData");
 
-            const aColumns = aKeys.map(sKey => ({
-                label: sKey
-                    .replace(/_/g, " ")
-                    .replace(/([a-z])([A-Z])/g, "$1 $2")
-                    .replace(/[^a-zA-Z0-9 ]/g, "")
-                    .toUpperCase(),
-                property: sKey,
-                type: exportLibrary.EdmType.String
-            }));
+        } else if (sBtnId.includes("exportTemperature")) {
+            const oTempModel = this.getView().getModel("dailyTemperatureModel");
+            aData = oTempModel?.getProperty("/temperatureData");
 
-            /* =========================
-               3. FILE NAME
-            ========================= */
-            const oNow = new Date();
-            const aMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-
-            const sDate =
-                ("0" + oNow.getDate()).slice(-2) +
-                aMonths[oNow.getMonth()] +
-                oNow.getFullYear();
-
-            let iHour = oNow.getHours();
-            const sAMPM = iHour >= 12 ? "PM" : "AM";
-            iHour = iHour % 12 || 12;
-
-            const sTime =
-                iHour + ":" +
-                ("0" + oNow.getMinutes()).slice(-2) +
-                " " + sAMPM;
-
-            const sFileName =
-                `${sReportType}_REPORT_${sSiteId}_${sDate}_${sTime}.xlsx`;
-
-            /* =========================
-               4. EXPORT
-            ========================= */
-            const oSheet = new Spreadsheet({
-                workbook: { columns: aColumns },
-                dataSource: aData,
-                fileName: sFileName
-            });
-
-            oSheet.build().finally(() => oSheet.destroy());
+        } else if (sBtnId.includes("exportLifeAfterMajorMinor")) {
+            const oLifeModel = this.getView().getModel("lifeAfterMajorMinorModel");
+            aData = oLifeModel?.getProperty("/reportData");
         }
+    }
+
+    if (!aData || !aData.length) {
+        sap.m.MessageToast.show("No data available to export");
+        return;
+    }
+
+    /* =========================
+       2. BUILD COLUMNS DYNAMICALLY
+    ========================= */
+    const aKeys = Object.keys(aData[0]);
+
+    const aColumns = aKeys.map(sKey => ({
+        label: sKey
+            .replace(/_/g, " ")
+            .replace(/([a-z])([A-Z])/g, "$1 $2")
+            .replace(/[^a-zA-Z0-9 ]/g, "")
+            .toUpperCase(),
+        property: sKey,
+        type: exportLibrary.EdmType.String
+    }));
+
+    /* =========================
+       3. FILE NAME
+    ========================= */
+    const oNow = new Date();
+    const aMonths = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+    const sDate =
+        ("0" + oNow.getDate()).slice(-2) +
+        aMonths[oNow.getMonth()] +
+        oNow.getFullYear();
+
+    let iHour = oNow.getHours();
+    const sAMPM = iHour >= 12 ? "PM" : "AM";
+    iHour = iHour % 12 || 12;
+
+    const sTime =
+        iHour + "-" +                      // ✅ avoid ":" in filename (windows safe)
+        ("0" + oNow.getMinutes()).slice(-2) +
+        sAMPM;
+
+    const sFileName = `${sReportType || "REPORT"}_REPORT_${sSiteId}_${sDate}_${sTime}.xlsx`;
+
+    /* =========================
+       4. EXPORT
+    ========================= */
+    const oSheet = new Spreadsheet({
+        workbook: { columns: aColumns },
+        dataSource: aData,
+        fileName: sFileName
+    });
+
+    oSheet.build().finally(() => oSheet.destroy());
+}
 
 
 
 
-,onViewDailyTemperatureChart: function () {
+
+        , onViewDailyTemperatureChart: function () {
 
     /* =========================
        1. GET MODEL & DATA
@@ -782,20 +890,7 @@ sap.ui.define([
     }
 
     /* =========================
-       2. PREPARE DATA
-       (FIX FOR DIMENSION ERROR)
-    ========================= */
-    const aPreparedData = aData.map(o => {
-        return Object.assign({}, o, {
-            xAxisLabel: o.date + " - " + o.shift_code
-        });
-    });
-
-    // Store prepared data in same model
-    oModel.setProperty("/_chartData", aPreparedData);
-
-    /* =========================
-       3. DETECT SENSOR KEYS
+       2. DETECT SENSOR KEYS
     ========================= */
     const aKeys = Object.keys(aData[0]);
     const aSensorKeys = aKeys.filter(k =>
@@ -809,16 +904,24 @@ sap.ui.define([
     }
 
     /* =========================
-       4. LABEL FORMATTER
+       3. LABEL FORMATTER
     ========================= */
     const fnLabel = function (sKey) {
         return sKey.replace(/_/g, " ").toUpperCase();
     };
 
-    /* =========================
-       5. DATASET
-    ========================= */
-    const oDataset = new sap.viz.ui5.data.FlattenedDataset({
+    /* =====================================================
+       CHART 1: DAILY-SHIFT WISE TEMPERATURE TREND
+    ===================================================== */
+
+    const aPreparedShiftData = aData.map(o => ({
+        ...o,
+        xAxisLabel: o.date + " - " + o.shift_code
+    }));
+
+    oModel.setProperty("/_shiftWiseChartData", aPreparedShiftData);
+
+    const oShiftDataset = new sap.viz.ui5.data.FlattenedDataset({
         dimensions: [{
             name: "Date / Shift",
             value: "{dailyTemperatureModel>xAxisLabel}"
@@ -828,56 +931,127 @@ sap.ui.define([
             value: `{dailyTemperatureModel>${k}}`
         })),
         data: {
-            path: "dailyTemperatureModel>/_chartData"
+            path: "dailyTemperatureModel>/_shiftWiseChartData"
         }
     });
 
-    /* =========================
-       6. CHART
-    ========================= */
-    const oChart = new sap.viz.ui5.controls.VizFrame({
+    const oShiftChart = new sap.viz.ui5.controls.VizFrame({
         vizType: "line",
         width: "100%",
-        height: "400px",
-        dataset: oDataset
+        height: "350px",
+        dataset: oShiftDataset
     });
 
-    oChart.setModel(oModel, "dailyTemperatureModel");
+    oShiftChart.setModel(oModel, "dailyTemperatureModel");
 
-    oChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    oShiftChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
         uid: "categoryAxis",
         type: "Dimension",
         values: ["Date / Shift"]
     }));
 
-    oChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+    oShiftChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
         uid: "valueAxis",
         type: "Measure",
         values: aSensorKeys.map(fnLabel)
     }));
 
-    oChart.setVizProperties({
-        title: { text: "Daily Shift Sensor Temperature Trend" },
+    oShiftChart.setVizProperties({
+        title: { text: "Daily-Shift Wise Temperature Trend" },
         plotArea: { dataLabel: { visible: false } },
         valueAxis: {
-            title: { visible: true, text: "Sensor Reading" }
+            title: { visible: true, text: "Temperature" }
+        },
+        legend: { visible: true }
+    });
+
+    /* =====================================================
+       CHART 2: DATE-WISE HIGHEST TEMPERATURE (ALL SENSORS)
+    ===================================================== */
+
+    const oMaxByDate = {};
+
+    aData.forEach(o => {
+        const sDate = o.date;
+
+        if (!oMaxByDate[sDate]) {
+            oMaxByDate[sDate] = { date: sDate };
+        }
+
+        aSensorKeys.forEach(sKey => {
+            const fVal = Number(o[sKey]);
+
+            if (
+                oMaxByDate[sDate][sKey] === undefined ||
+                fVal > oMaxByDate[sDate][sKey]
+            ) {
+                oMaxByDate[sDate][sKey] = fVal;
+            }
+        });
+    });
+
+    const aDateWiseMaxData = Object.values(oMaxByDate);
+    oModel.setProperty("/_dateWiseMaxChartData", aDateWiseMaxData);
+
+    const oMaxDataset = new sap.viz.ui5.data.FlattenedDataset({
+        dimensions: [{
+            name: "Date",
+            value: "{dailyTemperatureModel>date}"
+        }],
+        measures: aSensorKeys.map(k => ({
+            name: fnLabel(k),
+            value: `{dailyTemperatureModel>${k}}`
+        })),
+        data: {
+            path: "dailyTemperatureModel>/_dateWiseMaxChartData"
+        }
+    });
+
+    const oMaxChart = new sap.viz.ui5.controls.VizFrame({
+        vizType: "line",
+        width: "100%",
+        height: "350px",
+        dataset: oMaxDataset
+    });
+
+    oMaxChart.setModel(oModel, "dailyTemperatureModel");
+
+    oMaxChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+        uid: "categoryAxis",
+        type: "Dimension",
+        values: ["Date"]
+    }));
+
+    oMaxChart.addFeed(new sap.viz.ui5.controls.common.feeds.FeedItem({
+        uid: "valueAxis",
+        type: "Measure",
+        values: aSensorKeys.map(fnLabel)
+    }));
+
+    oMaxChart.setVizProperties({
+        title: { text: "Date Wise Highest Temperature Trend (All Sensors)" },
+        plotArea: { dataLabel: { visible: false } },
+        valueAxis: {
+            title: { visible: true, text: "Temperature" }
         },
         legend: { visible: true }
     });
 
     /* =========================
-       7. DIALOG
+       4. DIALOG
     ========================= */
     const oDialog = new sap.m.Dialog({
-        title: "Temperature Sensor Trend",
-        contentWidth: "80%",
-        contentHeight: "520px",
+        title: "Temperature Sensor Trends",
+        contentWidth: "90%",
+        contentHeight: "800px",
         resizable: true,
         draggable: true,
-        content: [oChart],
+        content: [
+            oShiftChart,
+            oMaxChart
+        ],
         endButton: new sap.m.Button({
             text: "Close",
-            type: "Negative",
             press: function () {
                 oDialog.close();
                 oDialog.destroy();
@@ -887,6 +1061,98 @@ sap.ui.define([
 
     oDialog.open();
 }
+,onFindPressLifeAfterMajorMinor: function () {
+    console.log("=== onFindPressLifeAfterMajorMinor START ===");
+
+    const oODataModel = this.getOwnerComponent().getModel();
+
+    const sSiteId = this.byId("siteId").getValue();
+    const sRunner = this.byId("ProductionLineId1").getValue();
+    const sCampaign = this.byId("CampaignNoId1").getValue();
+
+    if (!sSiteId || !sRunner || !sCampaign) {
+        sap.m.MessageToast.show("Please fill all required fields!");
+        return;
+    }
+
+    const sFunctionPath =
+        `/lifeAfterMajorMinorRepairProduction(` +
+        `site_id='${encodeURIComponent(sSiteId)}',` +
+        `productionLineName='${encodeURIComponent(sRunner)}',` +
+        `curr_campaign='${encodeURIComponent(sCampaign)}'` +
+        `)`;
+
+    const oContext = oODataModel.bindContext(sFunctionPath);
+
+    oContext.requestObject()
+        .then(function (oResponse) {
+            const aReportData = oResponse.value || [];
+
+            if (!aReportData.length) {
+                sap.m.MessageToast.show("No data found for selected filters");
+                return;
+            }
+
+            const oLifeModel = new sap.ui.model.json.JSONModel({
+                reportData: aReportData
+            });
+            this.getView().setModel(oLifeModel, "lifeAfterMajorMinorModel");
+
+            const oContainer = this.byId("lifeAfterMajorMinorContainer");
+            oContainer.removeAllItems();
+
+            const oTable = new sap.ui.table.Table({
+                rows: "{lifeAfterMajorMinorModel>/reportData}",
+                visibleRowCountMode: "Auto",
+                selectionMode: "None",
+                width: "100%",
+                enableColumnReordering: true,   // ✅ allow reordering
+                enableColumnResize: false       // ✅ disable resizing
+            });
+
+            oTable.addStyleClass("sapUiLargeMarginTop");
+
+            const aKeys = Object.keys(aReportData[0]);
+
+            aKeys.forEach(function (sKey) {
+                const sLabel = sKey
+                    .replace(/_/g, " ")
+                    .replace(/([a-z])([A-Z])/g, "$1 $2")
+                    .replace(/[^a-zA-Z0-9 ]/g, "")
+                    .toUpperCase();
+
+                oTable.addColumn(new sap.ui.table.Column({
+                    label: new sap.m.Label({ text: sLabel }),
+                    template: new sap.m.Text({
+                        text: `{lifeAfterMajorMinorModel>${sKey}}`
+                    }),
+                    resizable: false // ✅ extra safety (per column)
+                }));
+            });
+
+            oContainer.addItem(oTable);
+
+            const oButtonBox = new sap.m.HBox({ alignItems: "Center" });
+            oButtonBox.addStyleClass("sapUiSmallMarginTop");
+
+     oButtonBox.addItem(new sap.m.Button({
+    id: this.createId("exportLifeAfterMajorMinor"),
+    text: "Export  Data",
+    type: "Success",
+    icon: "sap-icon://excel-attachment",
+    press: this.onExportExcel.bind(this, "LIFE_AFTER_MAJOR_MINOR")
+}));
+
+
+            oContainer.addItem(oButtonBox);
+
+        }.bind(this))
+        .catch(function (err) {
+            console.error("API Error:", err);
+            sap.m.MessageToast.show("Error fetching data from API");
+        });
+    
+    }
 
 
 
