@@ -1,0 +1,298 @@
+<mvc:View
+    controllerName="com.trl.sitemanagementfe.controller.Report"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:layout="sap.ui.layout"
+    xmlns:core="sap.ui.core"
+    xmlns:tnt="sap.tnt"
+
+>
+    <Page
+        showHeader="true"
+        class="sapUiContentPadding sitePageBackground"
+    >   
+    <!-- ========== HEADER ========== -->
+        <customHeader>
+            <Bar class="headerBarFix">
+                <contentLeft>
+                    <Image
+                        src="/images/logo.png"
+                        height="40px"
+                        class="siteLogo"
+                    />
+                </contentLeft>
+                <contentMiddle>
+                    <HBox
+                        width="90%"
+                        justifyContent="Center"
+                    >
+                        <Text
+                            text="REPORTS"
+                            class="siteHeaderTitle"
+                        />
+                    </HBox>
+                </contentMiddle>
+            </Bar>
+        </customHeader>
+        <Button
+            text=""
+            type="Back"
+            press=".onNavToHome"
+        />
+
+        <!-- HEADER -->
+
+        <!-- Search Field -->
+     <Panel headerText="Search" class="whiteCard" expandable="false">
+    <content>
+
+        <!-- Row 1 -->
+        <HBox width="100%" justifyContent="SpaceBetween" alignItems="Start" class="sapUiSmallMarginTop">
+    <VBox width="30%">
+        <Label text="Site ID" required="true"/>
+        <Input id="siteId"
+               placeholder="Enter Site ID"
+               showValueHelp="true"
+               liveChange="onSiteIdLiveChange"
+               valueHelpRequest="onSiteIdValueHelp"/>
+    </VBox>
+
+    <VBox width="30%">
+        <Label text="Runner" required="true"/>
+        <Input id="ProductionLineId1"
+               placeholder="Enter Runner"
+               showValueHelp="true"
+               liveChange="onProdLineLiveChange"
+               valueHelpRequest="onProdLineValueHelp"/>
+    </VBox>
+
+    <VBox width="30%">
+        <Label text="Campaign Number" required="true"/>
+        <Input id="CampaignNoId1"
+               placeholder="Enter Campaign Number"
+               showValueHelp="true"
+               liveChange="onCampaignLiveChange"
+               valueHelpRequest="onCampaignValueHelp"/>
+    </VBox>
+</HBox>
+
+
+        <!-- Row 2 (NO GAP) -->
+    <HBox width="100%" justifyContent="Start" alignItems="Start"
+      class="sapUiSmallMarginTop gapLarge">
+    <VBox width="30%">
+        <Label text="From Date" required="true"/>
+        <DatePicker id="fromDate"
+                    width="100%"
+                    valueFormat="yyyy-MM-dd"
+                    displayFormat="dd-MM-yyyy"/>
+    </VBox>
+
+    <VBox width="30%">
+        <Label text="To Date" required="true"/>
+        <DatePicker id="toDate"
+                    width="100%"
+                    valueFormat="yyyy-MM-dd"
+                    displayFormat="dd-MM-yyyy"/>
+    </VBox>
+</HBox>
+
+
+
+    </content>
+</Panel>
+
+
+
+        <!-- HOUSE / PRODUCTION LINE 1 REPORT -->
+     <Panel
+    headerText="Daily Wise - Production Data"
+    class="whiteCard"
+    expandable="true"
+>
+    <content>
+
+        <!-- Side-by-side layout -->
+        <HBox
+            width="100%"
+            alignItems="Center"
+            justifyContent="Start"
+            class="sapUiSmallMarginBottom"
+        >
+
+            <!-- Button (LEFT) -->
+            <VBox width="20%" class="sapUiSmallMarginEnd">
+                <Button
+                    text="Find Production Data"
+                    type="Success"
+                    width="100%"
+                    press="onFindPressDailyProduction"
+                />
+            </VBox>
+
+            <!-- Red Info Message (RIGHT) -->
+            <VBox width="80%">
+                <tnt:InfoLabel
+                    text="Required fields: Site ID, From Date, and To Date"
+                    colorScheme="1"
+                />
+            </VBox>
+
+        </HBox>
+
+        <!-- Table Container -->
+        <VBox
+            id="tableContainer"
+            width="100%"
+            class="sapUiSmallMarginTop"
+        />
+
+    </content>
+</Panel>
+
+
+<!-- Daily Wise Temperature Data -->
+
+
+<Panel
+    headerText="Daily Wise - Temperature Data"
+    class="whiteCard"
+    expandable="true"
+>
+    <content>
+
+        <HBox
+            width="100%"
+            alignItems="Center"
+            justifyContent="Start"
+
+            class="sapUiSmallMarginBottom"
+        >
+
+            <!-- Find Button -->
+            <VBox width="20%" class="sapUiSmallMarginEnd">
+                <Button
+                    text="Find Temperature Data"
+                    type="Success"
+                    width="100%"
+                    press="onFindPressDailyTemperature"
+                />
+            </VBox>
+
+            <!-- Red Info Label -->
+            <VBox width="80%">
+                <tnt:InfoLabel
+                    text="Required fields: Site ID, Runner , From Date, and To Date"
+                    colorScheme="1"
+                />
+            </VBox>
+
+        </HBox>
+
+        <!-- Table / Chart Container -->
+        <VBox
+            id="temperatureTableContainer"
+            width="100%"
+            class="sapUiSmallMarginTop"
+        />
+
+    </content>
+</Panel>
+<Panel
+    headerText="Life After Major/Minor Repair"
+    class="whiteCard"
+    expandable="true"
+>
+    <content>
+
+        <HBox
+            width="100%"
+            alignItems="Center"
+            justifyContent="Start"
+            class="sapUiSmallMarginBottom"
+        >
+
+            <!-- Find Button (Only One) -->
+            <VBox width="20%" class="sapUiSmallMarginEnd">
+                <Button
+                    text="Find  Data"
+                    type="Success"
+                    width="100%"
+                    press="onFindPressLifeAfterMajorMinor"
+                />
+            </VBox>
+
+            <!-- Info Message -->
+            <VBox width="80%">
+                <tnt:InfoLabel
+                    text="Required fields: Site ID, Runner, Campaign Number"
+                    colorScheme="1"
+                />
+            </VBox>
+
+        </HBox>
+
+        <!-- Result Container -->
+        <VBox
+            id="lifeAfterMajorMinorContainer"
+            width="100%"
+            class="sapUiSmallMarginTop"
+        />
+
+    </content>
+</Panel>
+
+<Panel
+    headerText="Campaign Wise Production"
+    class="whiteCard"
+    expandable="true"
+>
+    <content>
+
+        <HBox
+            width="100%"
+            alignItems="Center"
+            justifyContent="Start"
+            class="sapUiSmallMarginBottom"
+        >
+
+            <!-- Find Button -->
+            <VBox width="20%" class="sapUiSmallMarginEnd">
+                <Button
+                    text="Find Data"
+                    type="Success"
+                    width="100%"
+                    press="onFindPressCampaignwiseProduction"
+                />
+            </VBox>
+
+          
+
+            <!-- Info Message -->
+            <VBox width="60%">
+                <tnt:InfoLabel
+                    text="Required fields: Site ID, Runner, Campaign Number"
+                    colorScheme="1"
+                />
+            </VBox>
+
+        </HBox>
+
+        <!-- Result Container -->
+        <VBox
+            id="campaignwiseProductionContainer"
+            width="100%"
+            class="sapUiSmallMarginTop"
+        />
+
+    </content>
+</Panel>
+
+
+        <!-- PLACEHOLDER FOR MORE LINES -->
+        <VBox
+            id="reportLinesContainer"
+            width="100%"
+        />
+    </Page>
+</mvc:View>
